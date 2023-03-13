@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Proyecto de Sistema de Costos" />
+  <meta name="author" content="Carlos Jhulyan, Waldir, Victor Heli, Jhon Cristian, Max Clever, Anderson Imanol" />
+  <meta name="generator" content="Hugo 0.98.0" />
+  <title>Sistema de Costos</title>
+  <link rel="canonical" href="https://getbootstrap.com/docs/5.2/examples/dashboard/" />
+  <link href="../assets/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="dashboard.css" rel="stylesheet" />
+  <script src="assets/moment/moment.js"></script>
+  <script src="assets/moment/es.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/9.8.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.8.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.8.2/firebase-auth-compat.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
+  <script src="assets/sweetalert2/sweetalert2@11.js"></script>
+</head>
+<body>
+  <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+    <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="/">Grupete Costos ❤😂</a>
+    <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  </header>
+
+  <div class="container-fluid">
+    <div class="row">
+      <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse bg-dark">
+        <div class="position-sticky pt-3">
+          <ul class="nav flex-column">
+            <li class="nav-item">
+              <a class="nav-link text-white-50" href="/">
+                <span data-feather="file" class="align-text-bottom text-white-50"></span>
+                Sobre Nosotros
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="/control_inventario.html">
+                <span data-feather="file" class="align-text-bottom text-white-50"></span>
+                Control de Inventario
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link text-white-50" href="/configuracion.html">
+                <span data-feather="file" class="align-text-bottom text-white-50"></span>
+                Configuración de Planilla
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white-50" aria-current="page" href="/planilla.html">
+                <span data-feather="file" class="align-text-bottom"></span>
+                Planilla de Remuneraciones
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white-50" href="/boleta.html">
+                <span data-feather="file" class="align-text-bottom text-white-50"></span>
+                Boleta de Pagos
+              </a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+          <h1 class="h2">Control de Inventario</h1>
+          <sp class="form-check form-switch">
+            <label class="form-check-label" for="edit-switch" id="evaluacion-switch-label">PEPS </label>
+            <input class="form-check-input" type="checkbox" role="switch" id="evaluacion-switch">
+          </sp>
+          <div>
+            <button type="button" class="btn btn-dark" id="button-format">
+              Nuevo Control de Inventario
+            </button> 
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalConfigurarPlanilla">
+              Encabezado
+            </button>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalInsertar">
+              Insertar
+            </button>
+            <button type="button" class="btn btn-success" id="button-save" hidden>
+              Guardar
+            </button>
+            <button type="button" class="btn btn-danger" id="button-clear" hidden>
+              Limpiar
+            </button>
+          </div>
+        </div>
+        
+        <span><b>Período:</b> <span id="periodo-label"></span></span> <br>
+        <span><b>RUC:</b> <span id="ruc-label"></span></span> <br>
+        <span><b>Apellidos y Nombres, denominación o Razón social:</b> <span id="razon-social-label"></span></span> <br>
+        <span><b>Establecimiento:</b> <span id="establecimiento-label"></span></span> <br>
+        <span><b>Código de la existencia:</b> <span id="codigo-existencia-label"></span></span> <br>
+        <span><b>Tipo (tabla 5):</b> <span id="tipo-tabla-label"></span></span><br>
+        <span><b>Descripción:</b> <span id="descripcion-label"></span></span> <br>
+        <span><b>Código de la unidad de medida (tabla 6):</b> <span id="codigo-unidad-medida-label"></span></span> <br>
+        <span><b>Método de evaluación:</b> <span id="evaluacion-label"></span></span> <br><br>
+
+        <div class="table-responsive">
+          <table class="table table-striped table-sm table-hover table-dark table-bordered">
+            <thead class="text-primary">
+              <tr class="text-center">
+                <th colspan="4">DOCUMENTO DE TRASLADO, COMPROBANTE DE PAGO, DOCUMENTO INTERNO O SIMILAR</th>
+                <th rowspan="2">TIPO DE OPERACIÓN (TABLA 12)</th>
+                <th colspan="3">ENTRADAS</th>
+                <th colspan="3">SALIDAS</th>
+                <th colspan="3">SALDO FINAL</th>
+              </tr>
+              <tr class="text-center">
+                <th scope="col" style="width: 90px;">FECHA</th>
+                <th scope="col">TIPO (TABLA 10)</th>
+                <th scope="col">SERIE</th>
+                <th scope="col">NÚMERO</th>
+
+                <th scope="col">CANTIDAD</th>
+                <th scope="col">COSTO UNITARIO</th>
+                <th scope="col">COSTO TOTAL</th>
+
+                <th scope="col">CANTIDAD</th>
+                <th scope="col">COSTO UNITARIO</th>
+                <th scope="col">COSTO TOTAL</th>
+
+                <th scope="col">CANTIDAD</th>
+                <th scope="col">COSTO UNITARIO</th>
+                <th scope="col">COSTO TOTAL</th>
+              </tr>
+            </thead>
+            
+            <tbody id="table-content-control">
+              
+            </tbody>
+            
+          </table>
+        </div>
+        <div id="spin" class="w-100 h-100 fixed-top justify-content-center align-items-center bg-black bg-opacity-25" style="display: flex;">
+          <div class="spinner-grow text-primary" style="width: 4rem; height: 4rem;" role="status"></div>
+        </div>
+
+
+        <table class="table table-striped table-sm table-hover table-dark table-bordered w-50">
+          <thead>
+            <tr class="text-center">
+              <th>INICIAL</th>
+              <th class="text-info">COMPRAS</th>
+              <th class="text-warning">I. FINAL</th>
+              <th class="text-success">C. VENTAS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="text-end">
+              <td id="inicial">-</td>
+              <td id="compras">-</td>
+              <td id="iFinal">-</td>
+              <td id="cVentas">-</td>
+            </tr>
+          </tbody>
+        </table>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal fade modal-lg" id="modalConfigurarPlanilla" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modalConfigurarPlanilla" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="staticBackdropLabel">Configurar Inventario</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="form-header-control">
+          <div class="modal-body">
+            <div class="row">
+              <div class="mb-3 col">
+                <label for="razon-social" class="form-label">Apellidos y nombre, denominación o Razon Social</label>
+                <input type="text" class="form-control" id="razon-social" name="razonSocial" autocomplete="none" />
+              </div>
+              <div class="mb-3 col">
+                <label for="ruc" class="form-label">RUC</label>
+                <input type="number" class="form-control" id="ruc" name="ruc" autocomplete="none" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="mb-3 col">
+                <label for="Establecimiento" class="form-label">Establecimiento</label>
+                <input type="text" class="form-control" id="Establecimiento" name="establecimiento" autocomplete="none" />
+              </div>
+              <div class="mb-3 col">
+                <label for="codigo-existencia" class="form-label">Código de la existencia</label>
+                <input type="text" class="form-control" id="codigo-existencia" name="codigoExistencia" autocomplete="none" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="mb-3 col">
+                <label class="form-label" for="tipo">Tipo</label>
+                <select class="form-select" id="tipo" name="tipo"></select>
+              </div>
+              <div class="mb-3 col">
+                <label class="form-label" for="codigo-medida">Código de la unidad de medida</label>
+                <select class="form-select" id="codigo-medida" name="codigoMedida"></select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="descripcion" class="form-label">Descripción</label>
+              <input type="text" class="form-control" id="descripcion" name="descripcion" autocomplete="none" />
+            </div>
+            <div class="row">
+              <div class="mb-3 col">
+                <label class="form-label" for="month">Mes</label>
+                <select class="form-select" id="month" name="month">
+                  <option value="01" selected>ENERO</option>
+                  <option value="02">FEBRERO</option>
+                  <option value="03">MARZO</option>
+                  <option value="04">ABRIL</option>
+                  <option value="05">MAYO</option>
+                  <option value="06">JUNIO</option>
+                  <option value="07">JULIO</option>
+                  <option value="08">AGOSTO</option>
+                  <option value="09">SEPTIEMBRE</option>
+                  <option value="10">OCTUBRE</option>
+                  <option value="11">NOVIEMBRE</option>
+                  <option value="12">DICIEMBRE</option>
+                </select>
+              </div>
+              <div class="mb-3 col">
+                <label class="form-label" for="year">Año</label>
+                <select class="form-select" id="year" name="year">
+                  <option value="2022" selected>2022</option>
+                  <option value="2023">2023</option>
+                  <option value="2024">2024</option>
+                  <option value="2025">2025</option>
+                  <option value="2026">2026</option>
+                  <option value="2027">2027</option>
+                  <option value="2028">2028</option>
+                  <option value="2029">2029</option>
+                  <option value="2030">2030</option>
+                  <option value="2031">2031</option>
+                  <option value="2032">2032</option>
+                  <option value="2033">2033</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button type="submit" class="btn btn-success" id="button-fetch-header">Aceptar</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade modal-lg" id="modalInsertar" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modalInsertar" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="staticBackdropLabel">Insertar Remuneraciones</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="form-insertar-control">
+          <div class="modal-body">
+            <div class="row">
+              <div class="mb-3 col">
+                <label for="fecha" class="form-label">Fecha</label>
+                <input type="date" class="form-control" id="fecha" name="fecha" />
+              </div>
+              <div class="mb-3 col">
+                <label for="tipo-comprobante" class="form-label">TIPO (tabla10)</label>
+                <select class="form-select" id="tipo-comprobante" name="tipoComprobante"></select>
+              </div>
+              
+            </div>
+            <div class="row">
+              <div class="mb-3 col">
+                <label for="dni" class="form-label">SERIE</label>
+                <input type="text" class="form-control" id="serie" name="serie" />
+              </div>
+              <div class="mb-3 col">
+                <label for="dni" class="form-label">NUMERO</label>
+                <input type="number" class="form-control" id="numero" name="numero" />
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="mb-3 col">
+                <label for="tipo-operacion" class="form-label">TIPO DE OPERACIÓN (tabla12)</label>
+              <select class="form-select" id="tipo-operacion" name="tipoOperacion"></select>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="mb-3 col">
+                <label class="form-label" for="year">ENTRADA/SALIDA</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="entradaSalida" id="entrada" value="entrada" checked>
+                  <label class="form-check-label" for="entradaSalida">
+                    ENTRADA
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="entradaSalida" id="salida" value="salida">
+                  <label cass="form-check-label" for="entradaSalida">
+                    SALIDA
+                  </label>
+                </div>
+              </div>
+              <div class="mb-3 col">
+                <label for="cargo" class="form-label">CANTIDAD</label>
+                <input type="number" class="form-control" id="cantidad" name="cantidad" />
+              </div>
+              <div class="mb-3 col" id="costo-unitario-content">
+                <label for="sueldo" class="form-label">COSTO UNITARIO</label>
+                <div class="input-group">
+                  <span class="input-group-text">S/.</span>
+                  <input type="number" class="form-control" id="costo-unitario" name="costoUnitario" />
+                </div>
+              </div>
+            </div>
+       
+          </div>
+          
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button type="submit" class="btn btn-success">Aceptar</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+<script src="../assets/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js" integrity="sha384-uO3SXW5IuS1ZpFPKugNNWqTZRRglnUJK6UAZ/gxOX80nxEkN9NcGZTftn6RzhGWE" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js" integrity="sha384-zNy6FEbO50N+Cg5wap8IKA4M/ZnLJgzc6w2NqACZaK0u0FXfOWRRJOnQtpZun8ha" crossorigin="anonymous"></script>
+<script src="javascript/control.js"></script>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
